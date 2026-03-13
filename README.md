@@ -1,2 +1,2 @@
-# snezhkavpn
-SnezhkaVpn - бесплатный рабочий vpn
+# algebraavpn
+AlgebraVpn - бесплатный рабочий vpn
