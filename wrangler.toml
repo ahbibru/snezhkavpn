@@ -1,9 +1,8 @@
-# Файл конфигурации Wrangler
-name = "algebpvpn"  # Имя вашего Worker (можно изменить)
-main = "_worker.js" # Главный файл (это важно!)
-compatibility_date = "2024-01-01"  # Дата совместимости
+name = "algebravpn"
+main = "_worker.js"
+compatibility_date = "2024-01-01"
 
-# Переменные окружения (дублируем на всякий случай)
-[vars]
-PASSWORD = "123"
-UUID = "30a587b7-ef47-4706-bc55-f9f7d34b468a"
+# ✅ ВАЖНО: разрешаем доступ к статическим файлам
+[site]
+bucket = "./"
+entry-point = "_worker.js"
