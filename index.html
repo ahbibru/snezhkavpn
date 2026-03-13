@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgebraVPN — инструкция по настройке</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 40px 20px 30px;
+            color: white;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-algebra {
+            background: linear-gradient(45deg, #ffd700, #ffaa00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-vpn {
+            background: white;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto 20px;
+            font-weight: 300;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .status-badge .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #4ade80;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            padding: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .config-item {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .config-label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .config-value {
+            background: #edf2f7;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            word-break: break-all;
+            color: #2d3748;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .config-value:hover {
+            background: #e2e8f0;
+            border-color: #667eea;
+        }
+
+        .copy-hint {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .config-value:hover .copy-hint {
+            opacity: 1;
+        }
+
+        .step {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: flex-start;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .step-text {
+            color: #718096;
+            font-size: 0.95rem;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 10px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            display: inline-block;
+            width: auto;
+            padding: 10px 20px;
+            font-size: 0.95rem;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3748;
+        }
+
+        .info-box {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            color: #0369a1;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: white;
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #2d3748;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 30px 15px 20px;
+            }
+
+            .logo {
+                font-size: 2.5rem;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .step {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .toast {
+                left: 20px;
+                right: 20px;
+                bottom: 20px;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero fade-in">
+            <div class="logo">
+                <span class="logo-algebra">Algebra</span>
+                <span class="logo-vpn">VPN</span>
+            </div>
+            <p class="subtitle">
+                Персональная инструкция по настройке для пользователя <strong>vasilek-dfghjc</strong>
+            </p>
+            <div class="status-badge">
+                <span class="dot"></span>
+                Сервер работает | 100,000 запросов/день
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content-grid">
+            <!-- Configuration Card -->
+            <div class="card fade-in">
+                <div class="card-header">
+                    <div class="card-icon">🔧</div>
+                    <h2 class="card-title">Ваши параметры подключения</h2>
+                </div>
+                
+                <div class="config-item">
+                    <span class="config-label">UUID (ваш уникальный идентификатор)</span>
+                    <div class="config-value" onclick="copyToClipboard('30a587b7-ef47-4706-bc55-f9f7d34b468a', this)">
+                        30a587b7-ef47-4706-bc55-f9f7d34b468a
+                        <span class="copy-hint">📋 копировать</span>
+                    </div>
+                </div>
+
+                <div class="config-item">
+                    <span class="config-label">Адрес сервера</span>
+                    <div class="config-value" onclick="copyToClipboard('vasilek-dfghjc.workers.dev', this)">
+                        vasilek-dfghjc.workers.dev
+                        <span class="copy-hint">📋 копировать</span>
+                    </div>
+                </div>
+
+                <div class="config-item">
+                    <span class="config-label">Порт</span>
+                    <div class="config-value" onclick="copyToClipboard('443', this)">
+                        443
+                        <span class="copy-hint">📋 копировать</span>
+                    </div>
+                </div>
+
+                <div class="config-item">
+                    <span class="config-label">WebSocket путь</span>
+                    <div class="config-value" onclick="copyToClipboard('/?ed=2560', this)">
+                        /?ed=2560
+                        <span class="copy-hint">📋 копировать</span>
+                    </div>
+                </div>
+
+                <div class="config-item">
+                    <span class="config-label">Пароль для входа в панель</span>
+                    <div class="config-value" onclick="copyToClipboard('123', this)">
+                        123
+                        <span class="copy-hint">📋 копировать</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v2rayTUN Setup Card -->
+            <div class="card fade-in">
+                <div class="card-header">
+                    <div class="card-icon">🚀</div>
+                    <h2 class="card-title">Настройка v2rayTUN (Windows)</h2>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-title">Скачайте v2rayTUN</div>
+                        <div class="step-text">
+                            Скачайте последнюю версию для Windows с официального GitHub
+                        </div>
+                        <a href="https://github.com/zhx47/v2rayTUN/releases" target="_blank" class="btn btn-secondary">
+                            ⬇️ Скачать v2rayTUN
+                        </a>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-title">Установите и запустите</div>
+                        <div class="step-text">
+                            Распакуйте архив и запустите v2rayTUN.exe (рекомендуется от имени администратора)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-title">Добавьте сервер</div>
+                        <div class="step-text">
+                            Нажмите "Добавить" и введите параметры:
+                        </div>
+                        <div class="code-block">
+Протокол: VLESS
+Адрес: vasilek-dfghjc.workers.dev
+Порт: 443
+UUID: 30a587b7-ef47-4706-bc55-f9f7d34b468a
+Транспорт: WebSocket
+Путь: /?ed=2560
+TLS: включен
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-title">Настройте TUN-режим</div>
+                        <div class="step-text">
+                            В настройках включите TUN-режим для проксирования всего трафика
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <div class="step-title">Подключитесь</div>
+                        <div class="step-text">
+                            Выберите добавленный сервер и нажмите "Подключиться"
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <span style="font-size: 20px;">✅</span>
+                    <span>После подключения проверьте IP на сайте <strong>2ip.ru</strong> — он должен измениться</span>
+                </div>
+            </div>
+
+            <!-- Quick Setup for Other Platforms -->
+            <div class="card fade-in">
+                <div class="card-header">
+                    <div class="card-icon">📱</div>
+                    <h2 class="card-title">Другие платформы</h2>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #2d3748; margin-bottom: 15px;">Android (v2rayNG)</h3>
+                    <div class="step-text">
+                        1. Установите v2rayNG из Play Market или с официального сайта<br>
+                        2. Нажмите "+" → "VLESS"<br>
+                        3. Введите те же параметры, что и выше<br>
+                        4. Сохраните и подключитесь
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <h3 style="color: #2d3748; margin-bottom: 15px;">iOS (Shadowrocket)</h3>
+                    <div class="step-text">
+                        1. Установите Shadowrocket из App Store<br>
+                        2. Нажмите "+" в правом верхнем углу<br>
+                        3. Type: VLESS<br>
+                        4. Заполните поля параметрами из карточки выше
+                    </div>
+                </div>
+
+                <div class="info-box" style="margin-top: 20px; background: #fff3cd; color: #856404;">
+                    <span style="font-size: 20px;">ℹ️</span>
+                    <span>Обратите внимание: UDP (игры, видеозвонки) не поддерживается из-за ограничений Cloudflare</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>AlgebraVPN для vasilek-dfghjc</p>
+            <p style="margin-top: 10px; font-size: 0.8rem;">
+                Работает на Cloudflare Workers • VLESS + WebSocket
+            </p>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        function copyToClipboard(text, element) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('✅ Скопировано: ' + text);
+                
+                element.style.background = '#d4edda';
+                element.style.borderColor = '#10b981';
+                
+                setTimeout(() => {
+                    element.style.background = '#edf2f7';
+                    element.style.borderColor = '#e2e8f0';
+                }, 200);
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast success show';
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // Анимация появления
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        });
+
+        document.querySelectorAll('.card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'all 0.5s ease';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
