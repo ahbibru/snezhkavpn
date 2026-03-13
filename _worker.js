@@ -832,18 +832,15 @@ async function handleUDPOutBound(webSocket, VLResponseHeader, log) {
  * @returns {string}
  */
 function getVLConfig(yourUUID, url) {
-	const wsPath = '/?ed=2560';
-	const encodedPath = encodeURIComponent(wsPath);
-	const addresses = Array.isArray(cfip) ? cfip : [cfip];
-	const header = 'v-l-e-s-s';
-	const configs = addresses.map(addr => `${header}://${yourUUID}@${addr}:443?encryption=none&security=tls&sni=${url}&fp=chrome&type=ws&host=${url}&path=${encodedPath}#Workers-service`);
-	return configs.join('\n').replace(new RegExp(header, 'g'), 'v' + 'l' + 'e' + 's' + 's');
+	// Используем один надежный адрес
+	const mainAddr = 'time.is';
+	
+	// Формируем простую VLESS ссылку
+	const vlessLink = `vless://${yourUUID}@${mainAddr}:443?encryption=none&security=tls&sni=${url}&fp=chrome&type=ws&host=${url}&path=/?ed=2560#AlgebraVPN`;
+	
+	return vlessLink;
 }
 
-/**
- * @param {import("@cloudflare/workers-types").Request} request
- * @returns {Response}
- */
 /**
  * @param {import("@cloudflare/workers-types").Request} request
  * @returns {Response}
