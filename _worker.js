@@ -1,162 +1,217 @@
+// ==Конфигурация== (поменяй на свои)
+const UUID = '30a587b7-ef47-4706-bc55-f9f7d34b468a'; // Твой UUID
+const PASSWORD = '123'; // Пароль для входа на сайт
+
+// ==Сам Worker== (это трогать не надо)
+import { connect } from 'cloudflare:sockets';
+
 export default {
-  async fetch(request) {
-    const url = new URL(request.url);
-    const uuid = '30a587b7-ef47-4706-bc55-f9f7d34b468a';
-    
-    // Главная страница с инструкцией
-    if (url.pathname === '/') {
-      return new Response(getHtml(), {
-        headers: { 'Content-Type': 'text/html;charset=utf-8' }
-      });
+  async fetch(request, env, ctx) {
+    try {
+      const url = new URL(request.url);
+      
+      // 1️⃣ Если это WebSocket-запрос — обрабатываем как VPN
+      const upgradeHeader = request.headers.get('Upgrade');
+      if (upgradeHeader && upgradeHeader.toLowerCase() === 'websocket') {
+        return handleWebSocket(request);
+      }
+      
+      // 2️⃣ Если запрос на корень — отдаём сайт
+      if (url.pathname === '/') {
+        return handleSite(request);
+      }
+      
+      // 3️⃣ Если запрос подписки по UUID или /link — отдаём конфиг
+      if (url.pathname === '/' + UUID || url.pathname === '/link') {
+        return handleSubscription(request);
+      }
+      
+      // 4️⃣ Если запрос на /info — показываем статус
+      if (url.pathname === '/info') {
+        return new Response(JSON.stringify({ 
+          status: 'online', 
+          uuid: UUID,
+          server: 'Cloudflare Workers'
+        }), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      
+      // 5️⃣ Всё остальное — проксируем на случайный сайт
+      return handleProxy(request);
+      
+    } catch (err) {
+      return new Response('Error: ' + err.message, { status: 500 });
     }
-    
-    // Подписка для v2rayTUN (сервер называется Free)
-    if (url.pathname === '/' + uuid || url.pathname === '/link') {
-      const vlessLink = `vless://${uuid}@time.is:443?encryption=none&security=tls&type=ws&path=/?ed=2560#Free`;
-      return new Response(btoa(vlessLink), {
-        headers: { 'Content-Type': 'text/plain' }
-      });
-    }
-    
-    return new Response('Not found', { status: 404 });
   }
 };
 
-function getHtml() {
+// ============================================
+// Обработка WebSocket (VPN)
+// ============================================
+function handleWebSocket(request) {
+  const webSocketPair = new WebSocketPair();
+  const [client, server] = Object.values(webSocketPair);
+  
+  server.accept();
+  
+  // Создаём TCP-соединение к прокси-серверу
+  connectToProxy(server);
+  
+  return new Response(null, { status: 101, webSocket: client });
+}
+
+async function connectToProxy(webSocket) {
+  try {
+    // Подключаемся к прокси-серверу
+    const proxySocket = connect({ hostname: 'cloudflare.com', port: 80 });
+    
+    // Передаём данные между WebSocket и TCP
+    proxySocket.opened.then(() => {
+      webSocket.addEventListener('message', event => {
+        const writer = proxySocket.writable.getWriter();
+        writer.write(event.data);
+        writer.releaseLock();
+      });
+    });
+    
+    const reader = proxySocket.readable.getReader();
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      webSocket.send(value);
+    }
+  } catch (e) {
+    webSocket.close();
+  }
+}
+
+// ============================================
+// Сайт с инструкцией
+// ============================================
+function handleSite(request) {
+  const url = new URL(request.url);
+  const providedPassword = url.searchParams.get('password');
+  
+  // Если нет пароля или он неверный — показываем логин
+  if (!providedPassword || providedPassword !== PASSWORD) {
+    return new Response(getLoginPage(request.headers.get('Host')), {
+      headers: { 'Content-Type': 'text/html;charset=utf-8' }
+    });
+  }
+  
+  // Пароль верный — показываем главную
+  return new Response(getMainPage(request.headers.get('Host')), {
+    headers: { 'Content-Type': 'text/html;charset=utf-8' }
+  });
+}
+
+function getLoginPage(host) {
   return `<!DOCTYPE html>
 <html>
 <head>
   <title>AlgebraVPN</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      min-height: 100vh;
-      margin: 0;
-      padding: 40px 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .container {
-      max-width: 600px;
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 2.5em;
-    }
-    h1 span {
-      background: linear-gradient(45deg, #ffd700, #ffaa00);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .info {
-      background: rgba(255,255,255,0.15);
-      border-radius: 10px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-    .info-item {
-      display: flex;
-      margin-bottom: 10px;
-      padding: 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.2);
-    }
-    .label {
-      font-weight: bold;
-      width: 120px;
-    }
-    .value {
-      flex: 1;
-      font-family: monospace;
-      word-break: break-all;
-    }
-    .status {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      background: #4ade80;
-      border-radius: 50%;
-      margin-right: 8px;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.5; }
-      100% { opacity: 1; }
-    }
-    .free-badge {
-      background: #ffd700;
-      color: #000;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.8em;
-      font-weight: bold;
-      margin-left: 8px;
-    }
+    body { font-family: Arial; background: linear-gradient(135deg, #667eea, #764ba2); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .login { background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; text-align: center; }
+    input { padding: 10px; margin: 10px 0; width: 200px; border-radius: 5px; border: none; }
+    button { padding: 10px 20px; background: #ffd700; border: none; border-radius: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="login">
+    <h1>🔐 AlgebraVPN</h1>
+    <form method="get">
+      <input type="password" name="password" placeholder="Введите пароль">
+      <br>
+      <button type="submit">Войти</button>
+    </form>
+  </div>
+</body>
+</html>`;
+}
+
+function getMainPage(host) {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <title>AlgebraVPN</title>
+  <style>
+    body { font-family: Arial; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 40px; }
+    .container { max-width: 600px; margin: 0 auto; background: rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; }
+    .info { background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; }
+    code { background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 3px; }
+    .btn { background: #ffd700; color: black; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 5px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1><span>Algebra</span>VPN</h1>
-    
+    <h1>🚀 AlgebraVPN</h1>
     <div class="info">
-      <div class="info-item">
-        <span class="label">Статус:</span>
-        <span class="value"><span class="status"></span>Активен</span>
-      </div>
-      <div class="info-item">
-        <span class="label">Сервер:</span>
-        <span class="value">Free <span class="free-badge">FREE</span></span>
-      </div>
-      <div class="info-item">
-        <span class="label">Адрес:</span>
-        <span class="value">algebravpn.vasilek-dfghjc.workers.dev</span>
-      </div>
-      <div class="info-item">
-        <span class="label">UUID:</span>
-        <span class="value">30a587b7-ef47-4706-bc55-f9f7d34b468a</span>
-      </div>
-      <div class="info-item">
-        <span class="label">Порт:</span>
-        <span class="value">443</span>
-      </div>
-      <div class="info-item">
-        <span class="label">Протокол:</span>
-        <span class="value">VLESS</span>
-      </div>
-      <div class="info-item">
-        <span class="label">Транспорт:</span>
-        <span class="value">WebSocket</span>
-      </div>
-      <div class="info-item">
-        <span class="label">Путь:</span>
-        <span class="value">/?ed=2560</span>
-      </div>
-      <div class="info-item">
-        <span class="label">TLS:</span>
-        <span class="value">Включен</span>
-      </div>
+      <h3>📡 Параметры подключения</h3>
+      <p><strong>Адрес:</strong> <code>${host}</code></p>
+      <p><strong>Порт:</strong> <code>443</code></p>
+      <p><strong>UUID:</strong> <code>${UUID}</code></p>
+      <p><strong>Протокол:</strong> <code>VLESS</code></p>
+      <p><strong>Транспорт:</strong> <code>WebSocket</code></p>
+      <p><strong>Путь:</strong> <code>/</code></p>
+      <p><strong>TLS:</strong> <code>Включен</code></p>
     </div>
     
-    <p style="text-align: center;">
-      <strong>Подписка:</strong> 
-      <a href="/30a587b7-ef47-4706-bc55-f9f7d34b468a" style="color: #ffd700;">/uuid</a> 
-      или 
-      <a href="/link" style="color: #ffd700;">/link</a>
-    </p>
-    
-    <p style="text-align: center; font-size: 0.9em; opacity: 0.8;">
-      AlgebraVPN для vasilek-dfghjc
-    </p>
+    <div style="text-align: center;">
+      <a href="/${UUID}" class="btn">📋 Подписка (base64)</a>
+      <a href="/info" class="btn">ℹ️ Информация</a>
+    </div>
   </div>
 </body>
 </html>`;
+}
+
+// ============================================
+// Подписка для клиентов
+// ============================================
+function handleSubscription(request) {
+  const host = request.headers.get('Host');
+  
+  // Генерируем VLESS-ссылку
+  const vlessLink = `vless://${UUID}@${host}:443?encryption=none&security=tls&type=ws&path=/${UUID}?ed=2560#AlgebraVPN`;
+  
+  // Кодируем в base64 (как ждут клиенты)
+  const base64 = btoa(vlessLink);
+  
+  return new Response(base64, {
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+  });
+}
+
+// ============================================
+// Простой прокси для остальных запросов
+// ============================================
+async function handleProxy(request) {
+  const url = new URL(request.url);
+  
+  // Список сайтов для прокси
+  const sites = [
+    'cloudflare.com',
+    'time.is',
+    'github.com'
+  ];
+  
+  const target = sites[Math.floor(Math.random() * sites.length)];
+  const proxyUrl = `https://${target}${url.pathname}${url.search}`;
+  
+  const headers = new Headers(request.headers);
+  headers.set('Host', target);
+  
+  const proxyRequest = new Request(proxyUrl, {
+    method: request.method,
+    headers: headers,
+    body: request.body
+  });
+  
+  try {
+    return await fetch(proxyRequest);
+  } catch {
+    return new Response('Proxy error', { status: 502 });
+  }
 }
